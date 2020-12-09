@@ -59,8 +59,8 @@ def train(model, input_sentences):
 	for i in range(0, num_sentences, batch_size):
 		if batch_size + i > num_sentences:
 			break
-		batch_encoder_inputs = train_french[i:i+batch_size,:]
-		batch_decoder_inputs = train_english[i:i+batch_size,:]
+		batch_encoder_inputs = input_sentences[i:i+batch_size,:]
+		batch_decoder_inputs = input_sentences[i:i+batch_size,:]
 		batch_labels = english_labels[i:i+batch_size,1:]
 		mask_tensor = np.where(batch_labels == eng_padding_index, 0, 1)
 		with tf.GradientTape() as tape:
@@ -69,10 +69,10 @@ def train(model, input_sentences):
 		gradients = tape.gradient(loss, model.trainable_variables)
 		model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-def test(model):
-    num_sentences,sentence_len = np.shape(test_english)
-	english_labels = test_english
-	test_english = test_english[:,:(sentence_len-1)]
+def test(model, test_poems, padding_index):
+    num_sentences,sentence_len = np.shape(test_poems)
+	english_labels = test_poems
+	test_poems = test_poems[:,:(sentence_len-1)]
 	batch_size = model.batch_size
 	acc_lst = []
 	loss_lst = []	
@@ -80,8 +80,8 @@ def test(model):
 	for i in range(0, num_sentences, batch_size):
 		if batch_size + i > num_sentences:
 			break
-		batch_encoder_inputs = test_french[i:i+batch_size,:]
-		batch_decoder_inputs = test_english[i:i+batch_size,:]
+		batch_encoder_inputs = test_poems[i:i+batch_size,:]
+		batch_decoder_inputs = test_poems[i:i+batch_size,:]
 		batch_labels = english_labels[i:i+batch_size,1:]
 		mask_tensor = np.where(batch_labels == eng_padding_index, 0, 1)
 		num_words = np.count_nonzero(mask_tensor == 1)
