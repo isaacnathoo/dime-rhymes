@@ -67,8 +67,11 @@ def split_poetry_foundation(shuffle=False, test_size=0.2):
     unique_words = list(set(words_lst))
     words_dict = dict((key, i) for i,key in enumerate(unique_words))
 
-    poetry_foundation_train, poetry_foundation_test = train_test_split(words_lst, test_size=test_size)
+    # poetry_foundation_train, poetry_foundation_test = train_test_split(words_lst, test_size=test_size)
 
+    poetry_foundation_train = words_lst[0:int(len(words_lst)*(1-test_size))]
+    poetry_foundation_test = words_lst[int(len(words_lst)*(1-test_size)):]
+    
     training_tokens = [words_dict.get(k) for k in poetry_foundation_train]
     testing_tokens = [words_dict.get(k) for k in poetry_foundation_test]
 
@@ -103,4 +106,4 @@ def get_data():
     return poetry_foundation_train, poetry_foundation_test, vocabulary_dict
 
 
-# get_data()
+get_data()
