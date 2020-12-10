@@ -42,14 +42,60 @@ class Model(tf.keras.Model):
     def loss(self, probs, labels):
         return tf.reduce_mean(tf.keras.losses.sparse_categorical_crossentropy(labels, probs))
 
+    def accuracy_function(self, prbs, labels, mask):
+		decoded_symbols = tf.argmax(input=prbs, axis=2)
+		accuracy = tf.reduce_mean(tf.boolean_mask(tf.cast(tf.equal(decoded_symbols, labels), dtype=tf.float32),mask))
+		return accuracy
+
+
 def generate_line():
     pass
 
-def test(model):
-    pass
+def train(model, input_sentences):
+    num_sentences,sentence_len = np.shape(input_sentences)
+	english_labels = input_sentences
+    input_sentences = input_sentences[:,:(sentence_len-1)]
+	batch_size = model.batch_size
+	for i in range(0, num_sentences, batch_size):
+		if batch_size + i > num_sentences:
+			break
+		batch_encoder_inputs = input_sentences[i:i+batch_size,:]
+		batch_decoder_inputs = input_sentences[i:i+batch_size,:]
+		batch_labels = english_labels[i:i+batch_size,1:]
+		mask_tensor = np.where(batch_labels == eng_padding_index, 0, 1)
+		with tf.GradientTape() as tape:
+			predictions = model.call(batch_encoder_inputs, batch_decoder_inputs)
+			loss = model.loss_function(predictions, batch_labels, mask_tensor)
+		gradients = tape.gradient(loss, model.trainable_variables)
+		model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-def train(model):
-    pass
+def test(model, test_poems, padding_index):
+    num_sentences,sentence_len = np.shape(test_poems)
+	english_labels = test_poems
+	test_poems = test_poems[:,:(sentence_len-1)]
+	batch_size = model.batch_size
+	acc_lst = []
+	loss_lst = []	
+	total_words = 0
+	for i in range(0, num_sentences, batch_size):
+		if batch_size + i > num_sentences:
+			break
+		batch_encoder_inputs = test_poems[i:i+batch_size,:]
+		batch_decoder_inputs = test_poems[i:i+batch_size,:]
+		batch_labels = english_labels[i:i+batch_size,1:]
+		mask_tensor = np.where(batch_labels == eng_padding_index, 0, 1)
+		num_words = np.count_nonzero(mask_tensor == 1)
+		total_words += num_words
+		probabilities = model.call(batch_encoder_inputs, batch_decoder_inputs)
+		loss = model.loss_function(probabilities, batch_labels, mask_tensor)
+		# loss = loss / num_words
+		loss_lst.append(loss)
+		accuracy = model.accuracy_function(probabilities, batch_labels, mask_tensor)
+		accuracy = accuracy * num_words
+		acc_lst.append(accuracy)
+	perplexity = np.exp(np.sum(loss_lst)/total_words)
+	avg_accuracy = tf.reduce_sum(acc_lst)/total_words
+	return perplexity,avg_accuracy 
 
 def main():
     train_poems, test_poems, vocab_dict, phenome_dict, padding_index = get_data('/data/kaggle_poems.txt','/data/poetry_foundation.txt')
