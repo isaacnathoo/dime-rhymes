@@ -127,11 +127,19 @@ def main():
 
     print("training complete")
 
+    checkpoint = tf.train.Checkpoint(
+            optimizer=model.optimizer,
+            embedding=model.embedding,
+            lstm=model.lstm,
+            dense_1=model.dense_1,
+            dense_2=model.dense_2)
+    manager = tf.train.CheckpointManager(checkpoint, './ckpts', max_to_keep=10)
+    manager.save()
+
     print("Train perplexity: " + str(test(model, train_inputs, train_labels)))
     print("Test perplexity: " + str(test(model, test_inputs, test_labels)))
 
     return
     
-
 if __name__ == '__main__':
-    main()
+    main() 

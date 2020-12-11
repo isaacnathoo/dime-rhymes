@@ -1,8 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import pandas
-from sklearn.model_selection import train_test_split
-import nltk
 import string
 
 # Gutenberg Dataset from: https://www.kaggle.com/terminate9298/gutenberg-poetry-dataset
