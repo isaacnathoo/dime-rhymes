@@ -14,10 +14,10 @@ class Model(tf.keras.Model):
 
         self.vocab_size = vocab_size
         self.phenome_size = phenome_size
-        self.window_size = 20 
+        self.window_size = 20
         self.embedding_size_words = 64
         self.embedding_size_phenomes = 64
-        self.batch_size = 64 
+        self.batch_size = 64
 
         # initialize embeddings and forward pass weights (weights, biases)
         self.E_words = tf.Variable(tf.random.normal([self.vocab_size, self.embedding_size_words], stddev=.1, dtype=tf.float32))
@@ -32,9 +32,9 @@ class Model(tf.keras.Model):
 
     def call(self, input_words, input_phenomes, initial_state=None):
         embedding_phenomes = tf.nn.embedding_lookup(self.E_phenomes, input_phenomes)
-        wholeseq_phenomes, memory_phenomes, carry_phenomes = self.lstm_layer1(embedding_phenomes, initial_state) 
+        wholeseq_phenomes, memory_phenomes, carry_phenomes = self.lstm_layer1(embedding_phenomes, initial_state)
         embedding_words = tf.nn.embedding_lookup(self.E_words, input_words)
-        wholeseq_words, memory_words, carry_words = self.lstm_layer2(embedding_words, initial_state=(memory_phenomes, carry_phenomes)) 
+        wholeseq_words, memory_words, carry_words = self.lstm_layer2(embedding_words, initial_state=(memory_phenomes, carry_phenomes))
         logits = self.dense_layer(wholeseq_words)
         probs = tf.nn.softmax(logits)
         return probs,(memory_words,carry_words)
@@ -75,7 +75,7 @@ def test(model, test_poems, padding_index):
 	test_poems = test_poems[:,:(sentence_len-1)]
 	batch_size = model.batch_size
 	acc_lst = []
-	loss_lst = []	
+	loss_lst = []
 	total_words = 0
 	for i in range(0, num_sentences, batch_size):
 		if batch_size + i > num_sentences:
@@ -95,7 +95,8 @@ def test(model, test_poems, padding_index):
 		acc_lst.append(accuracy)
 	perplexity = np.exp(np.sum(loss_lst)/total_words)
 	avg_accuracy = tf.reduce_sum(acc_lst)/total_words
-	return perplexity,avg_accuracy 
+	return perplexity,avg_accuracy
+
 
 def main():
     train_poems, test_poems, vocab_dict, phenome_dict, padding_index = get_data('/data/kaggle_poems.txt','/data/poetry_foundation.txt')
